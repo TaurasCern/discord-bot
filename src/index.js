@@ -1,6 +1,10 @@
 require('dotenv').config();
 const { Client, IntentsBitField } = require('discord.js');
-const { DisTube } = require(`distube`)
+const Discord = require('discord.js');
+const { DisTube } = require(`distube`);
+const { captureRejectionSymbol } = require('events');
+const fs = require('fs');
+const path = require('path');
 
 const client = new Client({
     intents: [
@@ -20,39 +24,44 @@ client.DisTube = new DisTube(client, {
     leaveOnFinish: true,
 });
 
+client.commands = new Discord.Collection()
+client.aliases = new Discord.Collection()
+
+fs.readdir(path.join(__dirname + `/commands/`), (err, files) => {
+    if(err) return console.log(`No commands found. ${err}`);
+
+    let commandFiles = files.filter(f => f.split('.').pop() === 'js');
+
+    if(commandFiles.length <= 0) return console.log('No commands found');
+
+    commandFiles.forEach(file => {
+        let command = require(`./commands/${file}`)
+
+        client.commands.set(command.name, command)
+        if(command.aliases) command.aliases.forEach(alias => client.aliases.set(alias, command.name))
+    });
+});
+
+
 client.on('interactionCreate', async (interaction) => {
     if(!interaction.isChatInputCommand()
     || interaction.user.bot
     || !interaction.guild) return;
-    if(interaction.commandName === `play`){
-        client.DisTube.play(interaction.member.voice.channel, interaction.options.data[0].value, {
-            member: interaction.member,
-            textChannel: interaction.channel,
-            interaction
-        })
-        interaction.deferReply();
-        interaction.deleteReply();
-    }
-    else if(interaction.commandName === `skip`){
-        const queue = client.DisTube.getQueue(interaction.guildId);
-        if(!queue){
-            return interaction.reply(`There is nothing in the queue`);
-        }
-        try {
-            const song = await queue.skip();
-            client.DisTube.skip(`Skipped ${song.name}`);
-        }
-        catch {
-            interaction.reply(`No more songs in the queue`);
-        }
-        
-    }
-    else if(interaction.commandName === `stop`){
-        client.DisTube.stop(interaction.guildId);
-        interaction.reply(`Stopped`);  
+
+    let command = client.commands.get(interaction.commandName)
+    || client.commands.get(client.aliases.get((interaction.commandName)))
+
+    if(command.inVoiceChannel && !interaction.member.voice.channel){
+        return interaction.reply('You have to be in a voice channel');
     }
 
-    
+    try {
+        command.run(client, interaction);
+    }
+    catch {
+        console.log(e);
+        interaction.reply(`Error: ${e}`);
+    }
 });
 
 client.DisTube

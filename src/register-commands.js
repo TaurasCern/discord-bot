@@ -24,6 +24,11 @@ const commands = [
         type: 1,
         description: "Stops the music bot",
     },
+    {
+        name: 'loop',
+        type: 1,
+        description: "Loops the queue",
+    },
 ];
 
 const rest = new REST({version: '10'}).setToken(process.env.TOKEN);

@@ -66,8 +66,8 @@ client.on('interactionCreate', async (interaction) => {
 
 client.DisTube
     .on(`playSong`, (queue, song) => queue.textChannel.send(
-        `Now playing - ${song.name}: <${song.url}>`))
+        `Now playing:\n${song.name}\n<${song.url}>`))
     .on(`addSong`, (queue, song) => queue.textChannel.send(
-        `Added to the queue - ${song.name}: <${song.url}>`));
+        `Added to the queue:\n${song.name}\n<${song.url}>`));
 
 client.login(process.env.TOKEN);

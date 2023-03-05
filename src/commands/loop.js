@@ -16,9 +16,5 @@ module.exports = {
             queue.setRepeatMode(0);
             interaction.reply(`Loop stopped`);
         }
-        //mode = mode ? (mode === 2 ? 'Repeat queue' : 'Repeat song') : 'Off';
-
-
-        //message.channel.send(`${client.emotes.repeat} | Set repeat mode to \`${mode}\``)
     }
 }
